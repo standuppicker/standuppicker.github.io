@@ -16,12 +16,6 @@
 <body>
   <h1>Standup picker</h1>
 
-  <div>
-    <label for="personInput">Wprowadź imię osoby: </label>
-    <input type="text" id="personInput">
-    <button onclick="addPerson()">Dodaj osobę</button>
-  </div>
-
   <h2>Lista osób</h2>
   <ul id="peopleList"></ul>
 
@@ -30,21 +24,42 @@
   <h3>Wylosowana osoba:</h3>
   <p id="selectedPerson"></p>
 
+  <div>
+    <div>
+      <label for="personInput">Wprowadź imiona osób (jedno imię na każdej linii): </label>
+    </div>
+    <div>
+      <textarea id="personInput" rows="5" cols="30"></textarea>
+  </div>
+    <button onclick="addPerson()">Dodaj osoby</button>
+  </div>
+
   <script>
-    // Funkcja dodająca osobę do listy
+    // Funkcja dodająca osoby do listy
     function addPerson() {
       const personInput = document.getElementById('personInput');
-      const name = personInput.value.trim();
+      const names = personInput.value.trim();
       
-      if (name === '') {
-        alert('Proszę wprowadzić imię osoby!');
+      if (names === '') {
+        alert('Proszę wprowadzić przynajmniej jedno imię!');
+        return;
+      }
+
+      // Rozdzielamy imiona na tablicę, usuwamy nadmiarowe spacje oraz puste linie
+      const peopleNames = names.split('\n').map(name => name.trim()).filter(name => name !== '');
+      
+      if (peopleNames.length === 0) {
+        alert('Proszę wprowadzić przynajmniej jedno imię!');
         return;
       }
 
       let people = JSON.parse(localStorage.getItem('people')) || [];
       
-      // Dodajemy osobę do listy
-      people.push({ name: name, selected: false });
+      // Dodajemy osoby do listy, domyślnie zaznaczając je
+      peopleNames.forEach(name => {
+        people.push({ name: name, selected: true }); // Zmieniamy na 'selected: true'
+      });
+
       localStorage.setItem('people', JSON.stringify(people));
 
       personInput.value = '';
