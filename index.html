@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Losowanie Standupu</title>
+  <style>
+    .highlighted {
+      background-color: yellow;
+    }
+    ul {
+      list-style-type: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Standup picker</h1>
+
+  <div>
+    <label for="personInput">Wprowadź imię osoby: </label>
+    <input type="text" id="personInput">
+    <button onclick="addPerson()">Dodaj osobę</button>
+  </div>
+
+  <h2>Lista osób</h2>
+  <ul id="peopleList"></ul>
+
+  <button onclick="drawPerson()">Losuj</button>
+  
+  <h3>Wylosowana osoba:</h3>
+  <p id="selectedPerson"></p>
+
+  <script>
+    // Funkcja dodająca osobę do listy
+    function addPerson() {
+      const personInput = document.getElementById('personInput');
+      const name = personInput.value.trim();
+      
+      if (name === '') {
+        alert('Proszę wprowadzić imię osoby!');
+        return;
+      }
+
+      let people = JSON.parse(localStorage.getItem('people')) || [];
+      
+      // Dodajemy osobę do listy
+      people.push({ name: name, selected: false });
+      localStorage.setItem('people', JSON.stringify(people));
+
+      personInput.value = '';
+      renderPeopleList();
+    }
+
+    // Funkcja renderująca listę osób
+    function renderPeopleList() {
+      const people = JSON.parse(localStorage.getItem('people')) || [];
+      const peopleList = document.getElementById('peopleList');
+      peopleList.innerHTML = '';
+
+      people.forEach((person, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <input type="checkbox" id="checkbox-${index}" ${person.selected ? 'checked' : ''}>
+          <label for="checkbox-${index}">${person.name}</label>
+          <button onclick="removePerson(${index})">Usuń</button>
+        `;
+        peopleList.appendChild(listItem);
+
+        // Dodajemy nasłuchiwanie na checkbox
+        document.getElementById(`checkbox-${index}`).addEventListener('change', function() {
+          person.selected = this.checked;
+          localStorage.setItem('people', JSON.stringify(people));
+        });
+      });
+    }
+
+    // Funkcja usuwająca osobę
+    function removePerson(index) {
+      let people = JSON.parse(localStorage.getItem('people')) || [];
+      people.splice(index, 1); // Usuwamy osobę z tablicy
+      localStorage.setItem('people', JSON.stringify(people)); // Zapisujemy zaktualizowaną listę
+      renderPeopleList(); // Ponownie renderujemy listę
+    }
+
+    // Funkcja losująca osobę
+    function drawPerson() {
+      const people = JSON.parse(localStorage.getItem('people')) || [];
+      const availablePeople = people.filter(person => person.selected);
+      
+      if (availablePeople.length === 0) {
+        alert('Brak osób do losowania! Zaznacz co najmniej jedną osobę.');
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availablePeople.length);
+      const selectedPerson = availablePeople[randomIndex];
+
+      document.getElementById('selectedPerson').innerText = selectedPerson.name;
+      
+      // Podświetlamy wybraną osobę na liście
+      highlightSelectedPerson(selectedPerson.name);
+    }
+
+    // Funkcja podświetlająca wybraną osobę
+    function highlightSelectedPerson(selectedName) {
+      const people = JSON.parse(localStorage.getItem('people')) || [];
+      const peopleList = document.getElementById('peopleList');
+      
+      // Usuwamy poprzednie podświetlenie
+      const allItems = peopleList.getElementsByTagName('li');
+      for (let item of allItems) {
+        item.classList.remove('highlighted');
+      }
+
+      // Podświetlamy wylosowaną osobę
+      for (let i = 0; i < people.length; i++) {
+        if (people[i].name === selectedName) {
+          const checkboxId = `checkbox-${i}`;
+          const listItem = document.getElementById(checkboxId).parentElement;
+          listItem.classList.add('highlighted');
+          break;
+        }
+      }
+    }
+
+    // Inicjalizacja listy osób z localStorage
+    window.onload = function() {
+      renderPeopleList();
+    };
+  </script>
+</body>
+</html>
